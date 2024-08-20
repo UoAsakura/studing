@@ -1,0 +1,196 @@
+Создание.
+В файле models.py нашего приложения мы создаем класс и наследуемся от 'models.Model'
+После чего, для начала можно написать селдующий код эквивалентный CREATE TEBLE:
+class Movie(models.Model):
+    # поле id прописывается автоматически.
+    name = models.CharField(max_length=40)
+    rating = models.IntegerField()
+    
+Основные типы полей, которые доступны вам в Django:
+CharField - title = models.CharField(max_length=100)
+TextField - description = models.TextField()
+IntegerField - age = models.IntegerField()
+FloatField - price = models.FloatField()
+DecimalField - price = models.DecimalField(max_digits=10, decimal_places=2)
+   # max_digits определяет максимальное количество цифр в числе (включая знаки до и после запятой)
+   # decimal_places определяет количество цифр после запятой.
+BooleanField - is_published = models.BooleanField()
+EmailField - email = models.EmailField(max_length=100)
+URLField - url = models.URLField()
+DateTimeField - data = models.DateTimeField(auto_now_add=True)
+
+
+Атрибуты полей в Django ORM.
+verbose_name - атрибут verbose_name позволяет задать человекочитаемое имя поля, которое будет 
+отображаться в административном интерфейсе Django и в других контекстах. Например:
+title = models.CharField(max_length=100, verbose_name="Заголовок")
+
+null - Атрибут null устанавливает, может ли поле иметь значение NULL в базе данных.
+Пример определения поля, которое может хранить значение NULL
+phone = models.CharField(max_length=15, null=True)
+
+blank - Атрибут blank устанавливает, может ли поле быть пустым в формах( формы будем проходить далее). 
+По умолчанию равно False. Если установлено в True, поле может быть оставлено пустым при создании или 
+изменении объекта модели через формы. Например:
+middle_name = models.CharField(max_length=50, blank=True)
+
+default -Атрибут default используется для определения значения по умолчанию для поля модели. Если при 
+создании объекта модели не указано значение для этого поля, то будет использовано значение, указанное 
+в атрибуте default. Это обеспечивает более гибкую и удобную работу с данными в вашем приложении, так 
+как не всегда необходимо явно указывать значение для каждого поля.
+description = models.TextField(default="Описание отсутствует")
+is_active = models.BooleanField(default=True)
+
+unique - Атрибут unique используется для определения того, должны ли значения в данном поле быть 
+уникальными в рамках всей таблицы базы данных. Если поле установлено как unique, то каждое значение 
+в этом поле должно быть уникальным, и если будет попытка создать запись с уже существующим значением, 
+это приведет к ошибке. По умолчанию каждое поле которое вы создаете в модели не проверяет значения на 
+уникальность, следовательно по умолчанию атрибут unique=False.
+class Users(models.Model):
+    username = models.CharField(max_length=50)
+    email = models.EmailField(unique=True)
+
+Добавление возможности валидировать входные данный по мин и макс значениям.    
+from django.core.validators import MinValueValidator, MaxValueValidator
+    
+Миграция БД.
+Для активации миграции необходимо ввести команду:
+python3 manage.py makemigrations
+(Создастся миграция в папке migrations)
+
+Для применения миграции к БД вводим команду:
+python3 manage.py migrate
+(Для применения изменений миграции в структуре нашей БД)
+
+Для отката до одной из предыдущих версий миграции, нужно ввести команду:
+python3 manage.py migrate app номер_миграции
+    
+Для сихнхронизации до определённой версии миграции, нужно ввести команду:
+python3 manage.py migrate posts 0004
+Команда showmigrations - показывает информацию о актуальных и возможных миграциях.
+    
+
+Запуск и работа в консоли shell.
+Вначале, находясь в дериктории нашего приложения, в консоли вводим команду:
+python3 manage.py shell
+После импортируем импортируем нужный класс:
+from movie_app.models import "нужный класс"
+После этого работая с ним как с классом, мы можем добовлять новые данные в нашу БД
+и после сохранять наш экземпляр с помощью функции self.save().
+
+Для просмотра происходящего "под капотом" импортируем:
+from django.db import connection
+connection.queries - демонстрация происходящего.
+    
+Для более комфортного взаимодействия с ком.стр. можно установть пакет ipython.
+После этого в shell появится возможность автозаполнения, индексирования операций, а также
+можно будет в одну строчку создавать и сохранять новые данные:
+Movie(name="XXX", rating=85).save()
+Если запись не происходит, то в программе БД можно прожать "Записать данные".
+
+Также дополнительно можно установть pip install django-extensions (и незабыть добавить его к
+приложениям в settings.INSTALLED_APPS.append('django_extensions'), для демонстрации происходящего 
+после каждого запроса. Но заходить в shell для этого нужно будет: 
+python3 manage.py shell_plus --print-sql
+    
+Демонстрация данных в консоли.
+Для того чтобы в консили нам были видны данный из БД, во первых в model.py нужно нужно обозначить
+метон __str__. Возможно импортировать наш класс: from movie_app.models import Movie.
+И после этого перезапустив консоль, вводить запрос: 
+Movie.objects.all()[:2] - вывести информацию по всем полям до второго элемента (отрицательные индексы
+запрещены).
+
+Методы object.
+get() - получение одного.
+
+filter() - получение многих.
+
+create() - альтернативный способ создания экз. класса (записи в таблицу), без save().
+
+Movies.objects.filter(budget=1000) фильтр на равенство поля
+
+Movies.objects.filter(budget__gt=1000) фильтр на поле больше значения (great then)
+
+Movies.objects.filter(budget__lt=1000) фильтр на поле меньше значения
+
+Movies.objects.filter(budget__gte=1000) фильтр на поле больше либо равно значения
+
+Movies.objects.filter(budget__lte=1000) фильтр на поле меньше либо равно значения
+
+Movies.objects.exclude(budget=1000) фильтр на поле не равно значению
+
+Movies.objects.filter(year__isnull=True) фильтр на поле пустое (False - не пустое)
+
+Movies.objects.filter(year__isnull=True, name=’Avatar’) фильтр на два поля
+
+Movies.objects.exclude(budget=1000).filter(name=’Avatar’) фильтр на два поля
+
+Movies.objects.filter(name__contains=’Avatar’) поле содержит значение, чувствителен к регистру
+
+Movies.objects.filter(name__icontains=’Avatar’) поле содержит значение, не чувствителен к регистру
+
+Movies.objects.filter(name__startswith=’a’) поле начинается с “a”
+
+endswith - заканчивается
+
+Movies.objects.filter(id__in=[3,5,6]’) выбираются все значения из списка
+    
+
+Добавление условия для фильтрации выбора данных.
+from django.db.models import Q
+С Q можно использовать: & - союз AND; | - союз OR.
+Movie.objects.filter(Q(rating__gt=87) | Q(budget__gt=1)) - реализация условия OR.
+~ тильда перед Q, меняет занчение в скобках на противоположное - аналог NOT.
+
+Если в условии присутствуют Q-закросы, то они должны идти первыми, как обязательные аргументы в функциях.
+
+
+Django Debug Toolbar.
+Для более удобного и понятного просмотра запросов, можно скачать и установить Django Debug Toolbar.
+Вся подробная инструкция есть на данном ресурсе https://django-debug-toolbar.readthedocs.io/en/latest/
+installation.html и заключается она в следующем.
+Скачивание и установки данной библиотеки либо с помощью КМ, либо через PyCharm.
+Добавление в INSTALLED_APPS в settings строчки если она отсутствует: 'django.contrib.staticfiles',
+а также 'debug_toolbar'.
+В MIDDLEWAREм нужно добавить 'debug_toolbar.middleware.DebugToolbarMiddleware'.
+Создать в settings INTERNAL_IPS = ["127.0.0.1",].
+В url конфиг проекта добавить path("__debug__/", include("debug_toolbar.urls")).
+
+
+Добавление дополнительных полей в запрос.
+Данный способ реализуется с помощью метода annotate:
+movies = Movie.objects.annotate(new_field_bool=Value(True))
+Во views же импортируем from django.db.models import Value. А для работы с уже существующими занчениями,
+пользуемся ранее созданным модулем get_url.
+
+
+Связывание таблиц.
+Для реализации связи одни ко многим, нам нужно:
+во первых, создать новый класс в models.py, соответственно новую таблицу и заполнить её.
+во вторых, в уже существующей таблице, создать новый объект связав существующую таблицу с новой
+director = models.ForeignKey(Director, on_delete=models.PROTECT, null=True)
+Также доп. аргументом можно добавить related_name="movies", в таком случае, способ получения
+связи будет доступно через director.0.movies.all вместо дефолтного director.0.movie_set.all.
+Director - это и есть новый класс (таблица) с информацией о режисёрах.
+PROTECT - метод при котором мы не можем удалить значение из таблицы Director, если оно 
+присутствует в связных с ней таблицах.
+CASCADE - в случае удаления, удалены будут и все строки связвнные с данным объектом.
+SET_NULL - в случае удаления, связные строки в других таблицах, приобретут значение NULL 
+в связных полях.
+в третьих, в admin.py в строки list_display и list_editable добавить строку director.
+И на последок зарегестрировать данную таблицу в admin.py: admin.site.register(Director)
+
+Для реализации многие ко многим, нам нужно:
+так же создать новый класс в models.py и после в модель другого класса ставить его след. образом
+actors = models.ManyToManyField(Actor)
+Так же произвести регистрацию в admin.py admin.site.register(Actor)
+Ещё в классе в admin.py таблицы что мы её связываем добавить filter_horizontal = ['actors'],
+для более удобного добовления новой информации.
+
+    
+    
+    
+    
+    
+    
+    

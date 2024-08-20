@@ -1,0 +1,677 @@
+Создание проекта.
+Создание Django проекта: в командной строке в выбранной дериктории, пишем команду 
+django-admin startproject <file_name>
+
+Создание приложения.
+Для создания приложения, переходим в корень проекта, где находистя файл 'manage.py'
+и пишем команду python3 manage.py startapp <app_name>
+
+Написание внутренней логики.
+Для встраивания приложений в тело проекта, в папка_проекта/urls.py, нужно добавить
+ссылку на путь в папку нашего приложения, где так же нужно будут создать папаку 
+urls.py, а папка_проекта/urls.py помимо path импортировать include.
+
+После чего в список urlpatterns добавить кортеж состоящий из имени в url строке
+и ссылку на наше приложение: 
+path('название_для_url/', include("название_приложения.urls")).
+
+В файле urls.py самого приложения, так же сосдать список urlpatterns, где уже
+будет указаны пути по такой же аналогии, незабыва с импортировать файл 
+название_приложения.views. После чего в urlpatterns записывать:
+path("название_для_url/ | <название_для_приложение.views>/",  
+      views_приложеия.название_функции_или_класса | views_приложеия.название_функции).
+      
+В urls корня проекта, можно можно также записывать через include ссылаясь на
+файл urls внутри папки приложения 
+path('название_для_url/', include("файл_urls_внутри_папки_приложения")).
+
+Для того чтобы реализовывать переадрессацию (Redirect) введенного запроса, напимер,
+'/1' и '/fisrt', нужно в views дополнительно импортировать HttpResponseRedirect.
+После чего в функции, которая отвечает за один из представленных способов ввода,
+реализовать вместо return HttpResponse(f"{указатель_на_объект_с_данными}") -> 
+		   return HttpResponseRedirect(f"/имя_приложения/{указатель...}").
+		   
+Однако у такого способа есть и свои минусы, а именно, прямая ссылка на название корневого
+url, "/имя_приложения". Устранить слабый участок кода можно с помощью 
+from django.urls import reverse. После в файле urls нашего приложения в пути указывающего
+на нашу функцию, нужно прописать имя 'name="horoscope_name"', а в функции перед
+отправлением Responcse запроса, создать объект = reverse("horoscope_name", 'указатель...')
+и уже его и отправить в HttpResponseRedirect(объект)
+	
+-------------------------------------------------------------------------------------------------------	
+	
+Написание Конверторов.	  
+В Django также можно создавать собственные именнованые конверторы. 
+Создать файл converters.py внутри вашего приложения Django.
+Внутри файла converters.py определить классы конвертеры (их можно скопировать из модуля
+'from django.urls import converters').
+Зарегистрируйте конвертер в вашем приложении. Это делается внутри файла urls.py вашего 
+приложения при помощи функции register_converter из модуля django.urls
+В момент регистрации вы определяете имя для вашего конвертера, которое затем можете 
+использовать. После регистрации вы можете использовать конвертеры внутри переменной 
+urlpatterns в том же файле urls.py
+
+-------------------------------------------------------------------------------------------------------
+
+Тестирование.
+Ещё в Django можно производить тестирование написанной логики приложений.
+Тетирование в Django - это процесс создания автоматизированных тестов, которые проверяют 
+правильность работы приложения. Тесты в Django могут проверять работу моделей, представлений, 
+URL-адресов, форм, кэша и других компонентов приложения.
+Django предоставляет инструменты для создания и запуска тестов. В Django тесты 
+определяются в специальном модуле tests.py внутри приложения.
+Django использует встроенную библиотеку unittest для написания тестов. 
+Базовым классом для написания тестов является класс TestCase.
+Суть заключается в написании тестов, напимер с помощью классов унаследованных
+от импортированного метода "TestCase", внутри файла.
+Как пример:     
+		def test_home_page(self):
+			responce = self.client.get('/horoscope/')
+			self.assertEquals(responce.status_code, 200)
+
+Здесь мы проводим тестирование приложения horoscope. Совершая от лица пользователя
+клиентский запрос <домен>/horoscope/, мы ожидаем получить ответ 200, что будет
+означать, что запрос обработан успешно и без ошибок.
+
+---------------------------------------------------------------------------------------------------------
+
+Создание шаблона HTML.
+Код страницы конечно можно писать во views, однако до поры до времени. С определённого
+момента это старновится жутко не удобно, грамоздко из за чего сложно потом что то в нём будет 
+понять. Есть выход! А именно в папке приложения создать директорию templates (именно с таким
+названием, дабы всё заработало), в этой директории создать поддиректорию с названием приложения
+(так опять же будет удобнее и логичнее) и уже там создавать HTML-файлы (шаблоны) куда и писать
+всё нужную информацию касательно вывода страницы.
+А что бы подключать те или иные функции из views (где у нас и находится бизнес логика приложения),
+импортируем в него "from django.template.loader import render_to_string"
+и в "return HttpResponce(responce)" мы будем передавать уже эту функцию, внутри которой и будет путь к
+приложению "responce = render_to_string("horoscope/info_zodiac.html")".
+Однако данную конструкцию можно заменить также и функцией render, которая по дэфолту импортирована
+в файл views и передать в неё в качастве первого аргумента функции, 
+что бы получилось:	return render(request, 'blog/index.html')
+
+Добавление динамики в HTML.
+Для добавления динамики в html файл, нам нужно передать третий аргумент (он же context: dict),
+это обязательно должен быть словарь. А уже в html файле, нам можно будет воспользоваься
+значением любого ключа следующим образом: <p> {{ ключ }} </p>
+Допускается варинт обращаться к индексу значения след. образом: <p> {{ ключ.1 }} </p> (1-ый индекс).
+
+Методы типа переданного объекта использовать не получится, но можно будте воспользоватся встроенными
+фильтрами вместо них.
+
+Распрастраннёные фильтры.
+add - {{ value|add:"2" }} - прибавление к значению.
+center - {{ value|center:"15" }} - центрирование строки (15 символов).
+cut - {{ value|cut:" " }} - удаление значения из всей строки (удаление всех пробелов).
+date - {{ value|date:"D d M y" }} - преобразование даты к определённому формату.
+default - {{ value|default:"something" }} - если значение отсутствует, подставляем шаблон.
+default_if_none -  {{ value|default_if_none:"something" }} - если значение None, подставляем шаблон.
+first - {{ value|first }} - возвращение первого элемента из последовательности.
+last - {{ value|last }} - возвращение последний элемент из последовательности.
+get_digit - {{ value|get_digit:"2" }} - возвращает позицию цифры с правой стороны.
+join - {{ value|join:"//" }} - объединение коллекции по указаному разделителю.
+lenght - {{ value|lenght }} - возвращает длину итерабельной последовательности.
+lenght_is - {{ value|lenght_is:"4" }} - равна ли длина переданному аргументу.
+ljust - {{ value|ljust:"10" }} - прижимая значение влево, расширяет строку до переданного значения.
+rjust - {{ value|rjust:"10" }} - прижимая значение вправо, расширяет строку до переданного значения.
+make_list - {{ value|make_list }} - преобразование переданного значения к листу.
+random - {{ value|random }} - возвращает рандомное значение из коллекции.
+safe - {{ value|safe }} - если в значении присутствовали html теги, они будут реализованы.
+slice - {{ value|slice:":2" }} - реализация срезов по аналогии с [:2].
+slugify - {{ value|slugify }} - приводит все буквы к нижнему регистру, а пробелы заполняет дефисами.
+
+Возможность использования условных операторов в html:
+						    {% if условие %}
+						    	<p></p>
+						    {% elif условие %}
+						    	<p></p>
+						    {% else %}
+						    	<p></p>
+						    {% endif %}
+						    
+Возможность использование цикла for:
+					{% for num in nums %}
+						<li> {{ num }} </li>
+					{% endfor %}
+
+Передача ссылок внутри HTML.
+Для придания нашему объекту в html возможность ссылаться, нам нужно будет использовать тег <a> href"" </a>.
+Стоит обратить внимание, что тег href является обязательным. Например, 
+	<a href="/horoscope/leo">leo</a>
+Однако такой вариант является скорее антипаттерном в случае перемещения по собственному ресурсу, т.к. если 
+изменится корневой адрес, то данная ссылкастанет не актуальной. Поэтому более предпочтителен вариант с
+использованием тега url внутри тега href, будет выглядеть данный способ следующим образом:
+	<a href="{% url 'horoscope_name' sign_zodiac=key %}"> {{ key|title }} </a>
+	
+	
+Создание базового шаблона в HTML и наследование от него.
+Для создание базовога html шаблона для нашего проекта, необходимо создать директорию по назвинием 
+templates в корне проекта, после чего создаём там html файл и заполняем его следующим образов:
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}  {% endblock %}</title>
+</head>
+<body>
+    {% block content %}  {% endblock %}
+</body>
+</html>
+
+После чего в settings в списке TEMPLATES, значением ключа 'DIRS' вставляем BASE_DIR / 'templates'.
+После чего в любом нужном нам html файле проекта мы сможем наследоваться от данного базового файла
+следующим образом:
+{% extends 'base.html' %}
+{% block title %}
+    title
+{% endblock %}
+
+{% block content %}
+    body
+{% endblock %}
+
+Тег include.
+Бывает что базового шаблона избыточно, например, когда мы хотим чтобы определённая информация выводилась
+только на определённых страницах. В такие моменты к нам на помощь приходит тег include.
+Воспользоваться данной возможностью можно в том числе следующим образом: 
+в директория_приложения/templates мы создаем папку includes, в которой создаём html файл.
+Данный файл будет состоять только из конкретных инструкий | сценариев | html-кода, который после мы 
+сможем внедрять в любой html файл приложения.
+В нужном нам участке кода, мы проставляем специальный тег {% include 'includes/navbar.html'%}, 
+первым обязательным аргументом ссылаясь на заранее написанный html файл. Тем самым мы добавляем в
+определённый участок кода наш шаблон.  
+Но это ещё не всё, все переменные контекста родительского шаблона видны в добавляемом шаблоне. 
+Это значит, что мы можем обращаться и использоваться переменные из основного шаблона. 
+
+Можно запрещать доступ к контексту основного шаблона, тогда переменные не будут доступны. 
+Делается это при помощи параметра only 
+{% include 'includes/navbar.html' only %}
+Можно пробрасывать свои собственные переменные в шаблон
+{% include 'includes/navbar.html' with a=100 b=200 %}
+
+--------------------------------------------------------------------------------------------------------------
+
+Подключение css к нашему приложению.
+Для подключения css и соответственно, графики для нашего ресурса, нам нужно будет прописать внутри
+тега <head> ссылку на наш css файл </head>. Для создание самого же файла нам нужно в директории
+нашего приложения, создать папку static (название важно) внутри которой создать папку одноименную
+с нашим приложением и уже в ещё одной папке css, создавать css файлы. Данный маршрут выглядит следующим 
+образом:
+Директория_проекта/приложение/static/имя_приложения/css/css-файлы.
+По аналогии можно создавать css-шаблоны и для базового html-файла проекта, что в Дир_проекта/templates:
+Директория_проекта/static/css/css-файлы. Но для этого дополнительно нужно будет в settings.py
+прописать STATICFILES_DIRS = [
+    BASE_DIR / 'static'
+] 
+Для импорта css-файлов в html-код, в шапке кода требуется прописать {% load static %} вначале кода
+и как было сказано ранее в head (либо напрямую, либо через наследование, либо через  include):
+<head> 
+<link rel="stylesheet" href=" {% static 'horoscope/css/index.css' %}">
+</head>
+
+
+Создание собственного фильтра (метода) в для html-кода.
+Для начала нужно создать внутри приложения Python Package под названием templatetags.
+После чего создаём внутри данного пакета питоновский файл. И его нужно будет заполнить 
+следующим образом:
+
+from django import template  # Импортируем из джинги нужный модуль
+# Необязательный модуль с помощью которого мы сможем задекорировать функцию, чтобы знать
+что в неё прилетит именно строка, в ином случае вызовется ошибка.
+from django.template.defaultfilters import stringfilter
+
+register = template.Library()  # После передаём переменной данное значение для создание декоратора.
+
+@register.filter(name="split")  # Если в аргумент 'name' не передать имя, 
+				  то оно возьмётся от названия функции
+def split(value, key=" "):	# Пишем функцию с желаемым сценарием выполнения.
+    return value.split(key)
+
+
+На случай исключения во время вбивания html вручную, наример,
+http://kinopoisk/movie/4, можно во views импортировать from django.shortcuts import get_object_or_404,
+когда мы хотим получить значение у БД.
+def show_one_movie(request, id_movie:int):
+	movie = get_object_or_404(Movie, id=id_movie)
+	render(request, 'movie_app/one_movie.html', {'movie': movie})
+	
+	
+Так же две полезные функции для файла model:
+from django.utils.text import slugify
+
+    def save(self, *args, **kwargs):
+        self.slug = slugify(self.name)
+        super(Movie, self).save(*args, **kwargs)
+
+    def get_url(self):
+        return reverse("show_one", args=[self.slug])
+        
+Здесь мы переопределяем метод save(), а также создаем метод get_url для нашей динамической
+ссылки в html файле: <a href="{{ movie.get_url }}">{{ movie.name }}</a>
+Атрибут slug же, создаёт удобное представление нашего экземпляра по его имени в данном случем, 
+для последующего занесения в url строку.
+Не забудте поправить так же представление пути во app/urls добавив конвектор slug: 
+        path('movie/<slug:slug_movie>', views.show_one_movie, name='show_one')
+        
+        
+Сортировка.
+Реализоваться сортировка может следующим образом:
+grapes = Grape.objects.order_by("name_eng") - по алфавиту.
+grapes = Grape.objects.order_by("-name_eng") - по алфавиту в обратоном порядке. 
+grapes = Grape.objects.order_by("name_eng", "area") - по нескольким значениям. 
+grapes = Grape.objects.order_by(F("area").desc(nulls_first=True) - Сортировка по убыванию, но NUll вначале.
+
+
+Агрегация.
+Для начала нужно импортировать функции агрегации.
+from django.db.models import F, Sum, Max, Count, Avg
+И уже после можно их применять как в консоли, так и в питоновском файле:
+movies = Movie.object.all()
+movies.aggregate(Sum('budget')) - бюджет всех вместе взятых фильмов.
+Допускается также перечисление:
+movies.aggregate(Sum('budget'),  Min('year'), Avg('rating')) - создастся словарь.
+
+----------------------------------------------------------------------------------------------------------
+
+Создание аккаунта администратора.
+Для начала вводим команду python3 manage.py createsuperuser, после чего заполняем имя, email и пароль.
+Далее с помощью добавление /admin/ к корневому url адресу, появится форма для входа в админку.
+Чтобы добавить модели с БД в область видмости админки, в файле admin.py нашего приложения, необходимо
+импортировать модуль from .models import Movie и уже после его добавить:
+admin.site.register(Movie)
+
+
+Смена языка.
+Для смены языка в админке, достаточно в settings значение LANGUAGE_CODE поменять на - 'ru-RU'.
+
+
+Изменение отображение моделей.
+Изначально класс нашей модели отображается через метод __str__.
+Для удобного предаставления моделей в файл admin.py директории нашего приложения, нужно импортировать
+класс нашей модели from .models import Movie после чего создать дополнительный класс:
+class MovieAdmin(admin.ModelAdmin):
+    list_display = ['name', 'rating', 'year']  # Уточнение желаемых колонок.
+И добавить данный класс вторым аргументом в строке регистрации нашего класса:
+admin.site.register(Movie, MovieAdmin) | @admin.register(Movie).
+Для добавления возможности редактирования в класс MovieAdmin нужно добавть атрибут:
+list_editable = ['rating', 'year']  #  поле name специально не указываем, т.к. на наго идёт ссылка.
+ordering = [F("year").asc(nulls_last=True), "name"]  #  Добавление сортировки по умолчанию.
+list_per_page = 5  #  Добавление пагинации.
+
+
+Создание дополнительного поля в таблице админки.
+Для этого внутри класса нашего приложения создаём жалаемый метод, заисываем его имя в list_display
+и вешаем на него декоратор для изменения имени в таблице и возможности его сортироки.
+    @admin.display(ordering="rating", description="Статус")
+    def rating_status(self, mov: Movie):
+        if mov.rating < 50: return "Так себе, честно говоря"
+        else: return "Must have!"
+
+Создание дополнительного поля в админке типа choices.
+Для создания строго фиксированного по выбору поля, в нашу модель БД нужно записать новое значание
+с возможностью выбора и аргументу choices присвоить список из них. 
+    USD = "USD"
+    RUB = "RUB"
+    CURRENSY_CHOICES = [(USD,  "Dollars"),
+    			(RUB,  "Rubles"),]
+    currency = models.CharField(max_length=3, choices=CURRENSY_CHOICES, default=RUB)
+Так же можно добавть значение, которое будет отображаться по дефолту.
+И не забыть добавить его в файл admin.py в список list_display для его отображения и работы с ним. 
+
+
+Создание действия в админке.
+Для создание нового действия, в нашем классе MovieAdmin нам нужно завести новый объект списочного
+типа, куда мы будем строковым форматом записывать новые методы созданные ниже.
+@admin.action(description="Установить валюту в евро")
+    def set_euro(self, request, qs:QuerySet):  # Для аннотации к QuerySet, его нужно импортировать
+    					       # из django.db.models.
+        count_update = qs.update(currency=Movie.EUR)
+        self.message_user(  # Таким образом можно создавать оповещение пользователю об операции.
+            request,
+            f"Измененно {count_update} записей",
+            level=messages.ERROR  # Для изменеия формата оповещения пользователя, нужно импортировать
+        )			  # messages из django.contrib 
+
+
+Добавление поисковой панели в админку.
+Для этого нужно всего в атрибуте нашего класса MovieAdmin создать объект search_fields списочного типа.
+И уже в него добавлять поля по которым будет производиться поиск.
+search_fields = ["name__istartwith", "rating"] - сначала поиск будет производиться по полю name,
+а конкретно по вхождению, без чувствительности к регистру, а после по полю rating.
+Также можно применять и другие мотоды из Movies.objects.
+
+
+Создание фильтра в Django Admin.
+Для создания фильтра нужно создать класс в файле anmin.py, унаследовавшись от admin.SimpleListFilter.
+После дать фильтру имя видимое для пользователя, а также имя видимое для url строки.
+После в функции lookups перечислить возможные варианты выбора.
+А в фонкции queryset, инструкции того, что исходя из выбора пользователя, будет отображаться.
+
+class YearFilter(admin.SimpleListFilter):
+    title = "Фильтр по году"
+    parameter_name = "qwertys"
+    def lookups(self, request, model_admin):
+        return [
+            ("1990-2000", "c 1990 по 2000"),
+            ("2000-2010", "c 2000 по 2010"),
+            ("2010-2020", "c 2010 по 2020"),
+        ]
+
+    def queryset(self, request, queryset: QuerySet):
+        if self.value() == "1990-2000":
+            return queryset.filter(year__in=list(range(1990, 2000)))
+        elif self.value() == "2000-2010":
+            return queryset.filter(year__gt=1999).filter(year__lt=2010)
+        elif self.value() == "2010-2020":
+            return queryset.filter(year__gt=2009).filter(year__lt=2020)
+        return queryset
+
+И после всего не забыть вставить его в атрибут list_filter головного класса приложения.
+
+
+Настраивание страницы по добавлению нового элемента.
+Для комфортного добовления новых элементов в БД через нашу админку, нам нужно настроить отображение полей.
+Производится базовом классе нашего приложения в файле admin.py, создавая атрибуты класса:
+fields = ['name', 'rating', 'currency', 'year',] - элементы которые мы хотим или обязаны заполнить.
+либо
+exclude = ['rating_status', 'currency'] - элементы которые мы не хотим или не обязаны заполнять.
+либо
+readonly_fields = ["year"] - поле будет видно на страница создания, но без вожножности его регистрировать.
+
+С помощью строки prepopulated_fields = {"slug": ("name", )} в классе приложения файла admin.py, можно
+сделать так, что slug в url будет определятся автоматически.
+
+
+Для реализации связи один к одному, нам нужно связать одну из несвязанных друг с другом моделей,
+ключом OneToOneField. В случае практики, это выглядит следующим образом.
+dressing = models.OneToOneField(DressingRoom, on_delete=models.SET_NULL, null=True, blank=True)
+
+------------------------------------------------------------------------------------------------------
+
+Создание формы.
+Для начала в директории приложения создаем файл forms.py
+from django import forms
+
+class FeedbackForm(forms.Form):
+    name = forms.CharField()
+    surname = forms.CharField()
+    feedback = forms.CharField(widget=forms.Textarea)
+После чего нашу форму импортируем во views, а уже оттуда в html файл.
+
+Наша модель:
+from django.core.validators import MinLengthValidator
+class Feedback(models.Model):
+    name = models.CharField(max_length=40, validators=[MinLengthValidator(3)])
+    surname = models.CharField(max_length=60)
+    feedback = models.TextField()
+    rating = models.PositiveIntegerField()
+
+Следующий класс можно искользовать, если мы хотим привязать форму к БД:
+class FeedbackForm(forms.ModelForm):
+    class Meta:
+        model = Feedback
+        fields = "__all__"
+        labels = {
+            "name": "Имя",
+            "surname": "Фамилия",
+            "feedback": "Отзыв",
+            "rating": "Рейтинг",}
+        error_messages = {
+            "name": {
+                "min_length": "Слишком мало символов",
+                "max_length": "Слишком много символов",
+                "required": "Укажите хотя бы пару символов",}
+                
+И уже следующим образом взаимодействовать с данным классом из forms.py во views.py:
+from .forms import FeedbackForm
+from .models import Feedback
+from django.views import View
+	class FeedbackView(View):
+	    def get(self, request):
+		form = FeedbackForm()
+		return render(request, "feedback/feedback.html", context={"form": form})
+
+	    def post(self, request):
+		form = FeedbackForm(request.POST)
+		if form.is_valid():
+		    form.save()
+		    return HttpResponseRedirect("/done")
+		return render(request, "feedback/feedback.html", context={"form": form})
+
+-------------------------------------------------------------------------------------------------------
+
+Класс TemplateView.
+Благодаря данному классу импортированному из django.views.generic.base во views.py, мы можем более
+комфортно и компактно взаимодействовать с информацией от пользователя.
+
+Представление всех отзывов пользователей:
+class ListFeedBack(TemplateView):
+    template_name = "feedback/list_feedback.html"
+    def get_context_data(self, **kwargs):
+        context = {"context": Feedback.objects.all()}  
+        return context
+
+Редирект на отзыв конкретного пользователя:
+class DetailFeedBack(TemplateView):
+    template_name = "feedback/detail_feedback.html"
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context = context["id_feedback"]
+        person_feedback = {"context": Feedback.objects.get(id=context)}
+        return person_feedback
+        
+Также в файле urls.py нашего приложения у данного класса нужно вызывать метод .as_view() .
+
+
+Класс ListView.
+from django.views.generic import ListView
+Ниже пример использования класса ListView во views.py:
+
+class ListFeedBack(ListView):
+    template_name = "feedback/list_feedback.html"  # адрес html-шаблона внутри нашего приложения.
+    model = Feedback  # Модель | БД из models.py откуда мы будем тянуть или класть информацию.
+    context_object_name = "context"  # Имя, которое будет уходить в html-шаблон (по-умолч object_list). 
+
+    def get_queryset(self):  # Применение функции, если нужно отсортировать данные уходящие в шаблон.
+        queryset = super().get_queryset()  # Наследование.
+        filter_qs = queryset.filter(rating__gt=4)  # Фильтруем данные модели по одному из полей.
+        return filter_qs  # Возвращаем | отправляем в html-шаблон.
+
+
+Класс DetailView.
+from django.views.generic import DeleteView
+Данный класс предназначен для работы с конкретным объектом из БД.
+Варианты путей в urls.py:
+    path('directors/<int:pk>', views.ShowOneDirector.as_view(), name='show_one_director'),
+    path('actors/<slug:slug>', views.ShowOneActor.as_view(), name='show_one_actor'),
+Сам класс во views.py:
+    class ShowOneActor(DeleteView):  # Наследуемся.
+    	template_name = 'movie_app/the_actor.html'  # Обозначаем путь к html-файлу.
+    	model = Actor  # Указываем в какой модели потребуется искать конкретный объект.
+
+
+Класс FormView.
+from django.views.generic.edit import FormView
+class FeedbackView(FormView):  # Наследуемся и именуемся.
+    form_class = FeedbackForm  # Указываем форму из forms.py.
+    template_name = "feedback/feedback.html"  # Обозначаем путь к html-файлу, где должна быть форма.
+    success_url = "/done"  # Обозначаем путь к html-файлу, куда будем переходить в случае валидного заполнения.
+
+    def form_valid(self, form):  # Переопределяем метод валидности формы.
+        form.save()  # Сохраняем успешную форму.
+        return super(FeedbackView, self).form_valid(form)  # Возвращаем её в БД.
+
+
+Класс CreateView.
+from django.views.generic.edit import CreateView
+По сути это упрощение предыдущего класса FormView.
+class FeedbackView(CreateView):
+    form_class = FeedbackForm
+    template_name = "feedback/feedback.html"
+    success_url = "/done"
+    model = Feedback
+
+
+Класс UpdateView.
+Класс для обновления информации.
+class FeedbackViewUpdate(UpdateView):
+    model = Feedback
+    fields = ["name"]  # При указании этого поля, мы будем видеть только его, но form_class тогда нужно будет убрать.
+    form_class = FeedbackForm
+    template_name = "feedback/feedback.html"
+    success_url = "/list"
+
+------------------------------------------------------------------------------------------------------------
+
+Загрузка файла с формы и сохранение его "вручную".
+Для этого в начале у наш html-код должен выглядеть примерно следующим образом:
+{% block content %}
+    <h2>Загрузите файл</h2>
+    <form  method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="file" name="image">
+        <button type="submit">Загрузить</button>
+    </form>
+ {% endblock %}
+ 
+Файл views.py:
+def storage_file(file):
+    old_name = file.name  # Оригинальное имя файла.
+    with open(f'gallert_tmp/{old_name}.jpg', "wb+") as new_file:  # Открываем файл на запись в формате байт кода.
+        for chunk in file.chunks():  # Используем специальный метод chunks итерируясь по входящему файу.
+            new_file.write(chunk)  # И в конце записываем его в нужную дерикторию.
+
+class GalleryView(View):
+    def get(self, request):
+        return render(request, "gallery/load_file.html")
+
+    def post(self, request):
+        storage_file(request.FILES['image'])  # Вызываем функцию записи файла в случае POST-запроса.
+        return render(request, "gallery/load_file.html")  # Возаращаем пользователя на эту же, но пустую страницу.
+
+
+Также мы можем создать БД, где будем хранить пути к файлам, а сами же файлы сохранять в определённом
+месте внутри директории нашего приложения.
+
+class Gallery(models.Model):  # models.py
+    image = models.FileField(upload_to='my_gallery')
+
+MEDIA_ROOT = BASE_DIR / "uploads"  # settings.py
+
+    # storage_file(request.FILES['image'])  #  Изменения в views.py
+    new_image = Gallery(image=request.FILES['image'])
+    new_image.save()
+
+Так же сокращённый вариает с CreateView: 
+class CreateGalleryView(CreateView):
+    form_class = GalleryUploadForm
+    template_name = "gallery/load_file.html"
+    success_url = "/load_image"
+    model = Gallery
+С изменение forms.py: 
+class GalleryUploadForm(ModelForm):
+    class Meta:
+        model = Gallery
+        fields = "__all__"
+
+------------------------------------------------------------------------------------------------------------
+
+Создание категорий для формирования html-страниц.
+Данный непростой способ можно разделить на неслько этапов.
+1. В models.py добавить новую модель и соеденить её с основной таблицей приложения:
+class Grape(models.Model):
+    ...
+    cat = models.ForeignKey('Category', on_delete=models.PROTECT, related_name='colors')
+    ...
+class Category(models.Model):
+    name = models.CharField(max_length=100, db_index=True)
+    slug = models.SlugField(max_length=255, unique=True, db_index=True)
+
+    def get_url(self):
+        return reverse("category", kwargs={'cat_slug': self.slug})
+
+2. Добавляем новый путь в app/urls.py:
+    path('category/<slug:cat_slug>', views_grape.show_category, name='category'),
+
+3. Во views создаём предатавление:
+def show_category(request, cat_slug):
+    category = get_object_or_404(Category, slug=cat_slug)
+    grapes = Grape.objects.filter(cat_id=category.pk)
+    data = {	'title': f'Рубрика: {category.name}',
+        	'grapes': grapes,
+        	'cat_selected': category.pk,	}
+    return render(request, "grape_varieties
+
+4. Если не создан, то создаём в корне приложения директорию templatetags с наполенинем 
+(__init__.py, grape_tags.py)
+
+from django import template
+register = template.Library()
+@register.inclusion_tag('grape_varieties/list_categories.html')
+def show_categories(cat_selected=0):
+    cats = Category.objects.all()
+    return {'cats': cats, 'cat_selected': cat_selected}
+
+5. Обновляем уже существующий html файл с экземплярами модели, а так же создаём новый.
+{% load grape_tags %}
+    {% if cat_selected == 0 or cat_selected is None %}
+    	<li class="selected" >Все категории</li>
+    {% else %}
+    	<li><a href="{% url 'to_grapes'  %}">Все категории</a></li>
+    {% endif %}
+{% show_categories cat_selected %}
+Новый html-файл list_categories.html:
+{% for cat in cats %}
+	{% if cat.slug == cat_selected %}
+		<li class="selected">{{cat.name}}</li>
+	{% else %}
+		<li><a href="{{ cat.get_url }}">{{ cat.name }}</a></li>
+	{% endif %}
+{% endfor %}
+
+------------------------------------------------------------------------------------------------------------
+
+Создание тегов для формирования html-страниц.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

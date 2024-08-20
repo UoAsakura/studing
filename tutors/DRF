@@ -1,0 +1,428 @@
+
+Создание.
+Создание DRF по началу ни чем не отличается, но в INSTALLED_APPS мы заносим: 
+"имя_приложения.apps.имя_приложенияConfig".
+
+Superuser:
+name - root
+e-mail - root@drfsite.ru
+password - zet175
+
+Так же после командой pip install djangorestframework устанавливаем наш модуль и в 
+INSTALLED_APPS мы заносим: 'rest_framework'.
+
+
+После наполняем файл vies.py:
+from rest_framework import generics
+from .models import Women
+from .serializers import WomenSerializer
+# Create your views here.
+
+class WomenAPIView(generics.ListAPIView):
+    queryset = Women.objects.all() # Достаём все объекты из нашего модуля (БД)
+    serializer_class = WomenSerializer # Передаём (передаём) указываем класс сериализатора.
+    
+
+Создание сериализотора.
+Для начала в директории нашего приложения создаём файл serializers.py и заполняем его:
+
+from rest_framework import serializers
+from .models import Women
+
+# Создаём класс сериализатора, который работает с моделями,
+# представлять их в JSON формате и отправлять в ответ на запрос пользователя.
+class WomenSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Women # Модель
+        fields = ('title', 'cat_id') # Поля
+        
+       
+После нужно связать маршрут с пердставлением через urls.py.
+from women.views import WomenAPIView
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('api/v1/womenlist/', WomenAPIView.as_view())
+]
+
+
+Заменя класса представления в файле views.py.
+from rest_framework.views import APIView
+from rest_framework.response import Response
+
+class WomenAPIView(APIView):
+    #  Создание метода для перехвата гет-запроса.
+    def get(self, request):
+        context = Women.objects.all().values()
+        return Response({'posts': list(context)})
+
+    #  Создание метода для перехвата пост-запроса.
+    def post(self, request):
+        post_new = Women.objects.create(
+            title=request.data["title"],
+            content=request.data["content"],
+            cat_id=request.data["cat_id"],
+        )
+        return Response({'post':model_to_dict(post_new)})
+
+
+Замена в файле сериализатора.
+class WomenSerializer(serializers.Serializer):
+    # Имена с классом представления должны совпадать.
+    title = serializers.CharField(max_length=255)
+    content = serializers.CharField()
+    time_create = serializers.DateTimeField()
+    time_update = serializers.DateTimeField()
+    is_published = serializers.BooleanField(default=True)
+    cat_id = serializers.IntegerField()
+
+После чего меняем views.py.
+content = Women.objects.all()
+return Response({'posts': WomenSerializer(content, many=True).data})
+
+serializer = WomenSerializer(data=request.data)
+serializer.is_valid(raise_exception=True)
+return Response({'post':WomenSerializer(post_new).data})
+
+
+Мы также можем более лаконично реализовать сериализатор.
+Для этого в файле с сериализаторами, мы должны дополнить нашу модель унаследованную от
+serializers.Serializer методами create и update. А в файле views дополнить класс
+WomenAPIView методами put и delete, а также изменить метод post. После всего 
+вышеперечисленного, нужно добавить новый путь для удаления того или иного объекта 
+из БД в urls.
+
+serializers.py
+def create(self, validated_data):
+    return Women.objects.create(**validated_data)
+
+def update(self, instance, validated_data):
+    instance.title = validated_data.get("title",  instance.title)
+    instance.content = validated_data.get("content",  instance.content)
+    instance.time_update = validated_data.get("time_update",  instance.time_update)
+    instance.is_published = validated_data.get("is_published",  instance.is_published)
+    instance.cat_id = validated_data.get("cat_id",  instance.cat_id)
+    instance.save()
+    return instance
+
+views.py
+def post(self, request):
+    serializer = WomenSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    serializer.save()
+    return Response({'post':serializer.data})
+
+def put(self,request, *args, **kwargs):
+    pk = kwargs.get("pk", None)
+    if not pk:
+        return Response({"error": "Mothod PUT is not allowed"})
+    try:
+        instance = Women.objects.get(pk=pk)
+    except:
+        return Response({"error": "Object does not exists"})
+    serializer = WomenSerializer(data=request.data, instance=instance)
+    serializer.is_valid(raise_exception=True)
+    serializer.save()
+    return Response({'post':serializer.data})
+
+def delete(self, request, *args, **kwargs):
+    pk = kwargs.get("pk", None)
+    if not pk:
+        return Response({"error": "Method DELETE not allowed"})
+    return Response({"error": "Delete post" + str(pk)})
+    
+urls.py
+path('api/v1/womenlist/<int:pk>/', WomenAPIView.as_view())
+
+
+Класс ModelSerializer и представление ListCreateAPIView.
+Мы можем также упростить создание класса сериализации унаследовав его более уточняюще.
+class WomenSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Women
+        fields = ("id", "title", "content", "cat")
+        #  fields = "__all__"  # Если мы хотим показать все записи.
+
+Также мы можем упростить класс представления во views.
+class WomenAPIList(generics.ListCreateAPIView):
+    queryset = Women.objects.all()
+    serializer_class = WomenSerializer
+
+
+И класс изменения во views.
+class WomenAPIUpdate(generics.UpdateAPIView):
+    queryset = Women.objects.all()
+    serializer_class = WomenSerializer
+
+
+При добавлении следующего словаря в файл setting.py :
+REST_FRAMEWORK = {
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    ]
+}
+Мы можем конфигурировать представление DRF в браурезе по нашему желанию.
+Для более глубоково понимания, можно закомментировать вторую строку.
+
+
+
+Однако у нас на лицо дублирование кода в файле views.py.
+Сократить и упростить код мы можем как в views.py , так и во urls.py
+
+Оставляем только один класс в views:
+class WomenViewSet(mixins.CreateModelMixin,  # Создание записи.
+                   mixins.RetrieveModelMixin,  # Захват записи.
+                   mixins.UpdateModelMixin,  # Изменение записи.
+                   mixins.DestroyModelMixin,  # Удаление записи.
+                   mixins.ListModelMixin,  # Чтение записи.
+                   GenericViewSet):
+    queryset = Women.objects.all()
+    serializer_class = WomenSerializer
+
+И один роут в urls с добавлением нового модуля из библиотеки rest_framework:
+from rest_framework import routers
+
+router = routers.SimpleRouter()
+router.register(r'women', WomenViewSet)
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('api/v1/', include(router.urls)),
+
+
+Теперь чуть глубже вникним в понимание routers и для этого немного поменяем код.
+router = routers.DefaultRouter()
+print(router.urls)
+Первые два отвечают за получение списка и добавление объектов.
+Третий и четвёртый отвечают за изменение и удаление.
+Последние два, возращают список маршрутов, которые присутствуют в роутаре
+(которые получаются при регистрации  router.register(r'women', WomenViewSet) ).
+[<URLPattern '^women/$' [name='women-list']>, 
+<URLPattern '^women\.(?P<format>[a-z0-9]+)/?$' [name='women-list']>, 
+<URLPattern '^women/(?P<pk>[^/.]+)/$' [name='women-detail']>, 
+<URLPattern '^women/(?P<pk>[^/.]+)\.(?P<format>[a-z0-9]+)/?$' [name='women-detail']>, <URLPattern '' [name='api-root']>, 
+<URLPattern '<drf_format_suffix:format>' [name='api-root']>]
+
+И применение DefaultRouter, даёт нам возможность обращаться к роутеру:
+http://127.0.0.1:8000/api/v1/  в котором содержится список доступных нам роутеров.
+
+Помимо этого мы можем изменть как роутер, так и имя предаставления:
+router.register(r'women2', WomenViewSet, basename='men')
+
+@action(methods=['get'], detail=False)
+methods - поддерживаемые методы.
+detail - возращение либо списка (как сейчас), либо одной конкретной записи True.
+# Новый маршрут формируется используя имя метода.
+def category(self, request):
+    # Список категорий.
+    cats = Category.objects.all()
+    # Возвращение json-ответа.
+    return Response({'cats': [c.name for c in cats]})
+
+Если мы хотим показывать только определённые объекты, то как вариант
+в нашем классе представления нужно реализовать функцию:
+    def get_queryset(self):
+        return Women.objects.all()[:3]
+
+И теперь атрибут queryset = Women.objects.all() мы можем убрать, и тут нам
+придётся воспользоваться параметром basename в urls.py
+
+Дополняем метод для достопа к отдельным объектам.
+    def get_queryset(self):
+        # Дополнение для доступа к конкретному объекту.
+        pk = self.kwargs.get('pk')
+        if not pk:
+            return Women.objects.all()[:3]
+        return Women.objects.filter(pk=pk)
+
+Пример создание собственных роутеров.
+class MyCustomRouter(routers.SimpleRouter):
+    routes = [
+        # Маршрут читающий список статей.
+        routers.Route(
+            url=r'^{prefix}$',  # Шаблон маршрута.
+            mapping={'get': 'list'},  # Связывает тип запроса с соответствующем методов viewset
+            name='{basename}-list',  # Название маршрута.
+            detail=False,  # Список или конкретная запись.
+            initkwargs={'suffix': 'List'}  #
+        ),
+        # Маршрут читающий конекретную статью по её id.
+        routers.Route(
+            url=r'^{prefix}/{lookup}$',
+            mapping={'get': 'retrieve'},
+            name='{basename}-detail',
+            detail=True,
+            initkwargs={'suffix': 'Detail'}
+        )
+    ]
+    
+router = MyCustomRouter()
+Демонстрация создания собственного кастомного роутера.
+
+
+Попробуем реализовать ограничения доступа.
+Для начала мы можем создать новый файл permissions.py, где будем создавать
+новые кастомные классы с персональными разрешениями.
+from rest_framework import permissions
+
+class IsAdminOrReadOnly(permissions.BasePermission):
+    def has_permission(self, request, view):
+        # Проверяем запрос не для изменения данных.
+        if request.method in permissions.SAFE_METHODS:
+            # Даём доступ для всех пользователей.
+            return True
+        # Иначе только для администратора.
+        return bool(request.user and request.user.is_staff)
+
+class IsOwnerOrReadOnly(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            # Даём доступ для всех пользователей, если запрос не на изменение.
+            return True
+        # Если пользователь который пришёл с запросом,
+        # является пользователем-создателем из БД, тогда даём доступ.
+        return obj.user == request.user
+
+После чего мы можем заменить наши предаставления:
+class WomenAPIList(generics.ListCreateAPIView):
+    queryset = Women.objects.all()
+    serializer_class = WomenSerializer
+    # Объект в котором с помощью контейнера можно указать,
+    # какие действия может делать пользователь (любой пользователь).
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+class WomenAPIUpdate(generics.RetrieveUpdateAPIView):
+    queryset = Women.objects.all()
+    serializer_class = WomenSerializer
+    # Изменять может только создатьль объекта.
+    permission_classes = [IsOwnerOrReadOnly]
+
+class WomenAPIDestroy(generics.RetrieveDestroyAPIView):
+    queryset = Women.objects.all()
+    serializer_class = WomenSerializer
+    # Действия связанные с удалением, может производить только администратор.
+    permission_classes = [IsAdminOrReadOnly]
+
+Для того чтобы мы добавляли новые записи от имени текущего пользователя,
+в serializers.py в родительский класс, добавляем следующий атрибут:
+user = serializers.HiddenField(default=serializers.CurrentUserDefault)
+который является скрытым полем для в котором записан актуальный пользователь.
+
+Стоит добавить, если мы в настройках добавим к нашему объекту REST_FRAMEWORK:
+    'DEFAULT_PERMISSION_CLASSES':[
+        'rest_framework.permissions.IsAuthenticated',
+    ]
+после чего закомментируем стору permission_classes = [IsAuthenticatedOrReadOnly]
+в классу вывода всех объектов, то на уровне фреймворка, объекты
+смогут просматривать только авторизованные пользователи.
+Но если что, по умолчанию в REST_FRAMEWORK, записано слудующим образом:
+        'rest_framework.permissions.IsAllowAny',
+
+
+Авторизация и аутентификация.
+Для подключения возможности авторизации, достаточно в urls прописать новый маршрут:
+    path('api/v1/drf-auth/', include('rest_framework.urls')),
+
+
+Аутентификация по токенам.
+В DRF аутентификацию можно производить с помощью:
+ - обычной аутентификации токенами (библиотека Djoser)
+ - JWT-токены (библиотека Simple JWT)
+
+Для начала устанавливаем пакет.
+pip install djoser
+Далее подключаем к проекту.
+INSTALLED_APPS = [
+...
+'rest_framework.authtoken',
+'djoser',
+...
+]
+Совершаем миграцию - python3 manage.py migrate
+Добавляем в urls:
+    path('api/v1/auth/', include('djoser.urls')),
+    re_path(r'^auth/', include('djoser.urls.authtoken')),
+Дописываем REST_FRAMEWORK:
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        # Разрешаем аутентификацию по токенам.
+        'rest_framework.authentication.TokenAuthentication',
+        # Разрешаем аутентификацию по сессиям.
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ]
+Ссылка на всевозможные действия с юземром:
+https://djoser.readthedocs.io/en/latest/base_endpoints.html
+
+
+Идея авторизации по JWT-токенам (JSON Web Token).
+jwt_token = header.payload.signature
+Импорт:
+pip install djangorestframework-simplejwt
+Заменение в REST_FRAMEWORK:
+'rest_framework.authentication.TokenAuthentication',
+на
+'rest_framework_simplejwt.authentication.JWTAuthentication',
+В urls.py:
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+    TokenVerifyView)
+urlpatterns = [
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/token/verify/', TokenVerifyView.as_view(), name='token_verify'),]
+
+Добавляем строчки в settings.py из 
+https://django-rest-framework-simplejwt.readthedocs.io/en/latest/settings.html
+
+
+Пагинация.
+В словаре REST_FRAMEWORK прописываем:
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    # При отображении юзеров, будет прменяться он даже при наличии кастомной пагинации.
+    'PAGE_SIZE': 10
+
+Также возможно реализовать подключение собственных классов пагинации.
+class WomenAPIListPagination(PageNumberPagination):
+    # Количество записей на страницу.
+    page_size = 3
+    # Строка, через которую обратившись, клиент может
+    # регулировать кол-во отображаемых записей.
+    page_size_query_param = 'page_size'
+    # Ограничение по регулируемому кол-ву записей.
+    max_page_size = 10_000
+
+А для активации при отображении списка объектов, нужно дописать в класс отображения:
+    pagination_class = WomenAPIListPagination
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
