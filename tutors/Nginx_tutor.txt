@@ -1,0 +1,5 @@
+
+sudo systemctl status nginx.service - статус работы nginx.
+sudo nginx -t - проверка nginx.
+sudo nginx -s reload - перезапуск сервера.
+
