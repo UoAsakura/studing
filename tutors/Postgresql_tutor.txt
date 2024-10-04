@@ -1,0 +1,59 @@
+
+sudo apt install postgresql - установка.
+
+sudo -i -u postgres - Вход в учётную запись posgres.
+	createdb <имя базы данных> - создание базы данных.
+	dropdb <имя базы данных> - удаление базы данных.
+	psql
+		\l - проверка списка баз данных.
+		\q - выход.
+		
+		\c <имя БД> - заходим в БД.
+			\d - демонстрация табличек.
+			\d <имя таблицы> - проверка таблички.
+	 		create table <имя таблицы> (id serial, inn int); - создание таблицы.
+			alter table <имя таблицы> add <имя колонки> people varchar (255); - добавление колонки.
+			alter table <имя таблицы> rename column <имя колонки> to name; - переименование колонки.
+			alter table <имя таблицы> drop column <имя колонки>; - удаление колонки.
+			alter table <имя таблицы> rename to <новое имя>; - переименование таблицы.
+			drop table <имя таблицы> - удаление таблицы.
+			CREATE ROLE evgen WITH LOGIN PASSWORD 'ваш_пароль'; - создание роли пользователя.
+			ALTER ROLE evgen WITH SUPERUSER; - если нужно, добавьте пользователю права суперпользователя или другие привилегии:
+			GRANT ALL PRIVILEGES ON SCHEMA public TO evgen; - дать пользователю evgen права на схему public.
+			GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO evgen; - если нужно, предоставьте права на создание объектов в схеме.
+
+Создание и копирование дампа БД.
+sudo -u postgres pg_dump -d <имя БД> -FC > <расположение и имя файла для дампа><~/my.gz> - создаём дамп БД в директории.
+sudo -u postgres psql -d <имя БД> < tgposts_dump.sql - копируем образ и данные БД в нашу созданую БД.
+
+
+
+
+2bca22016aed63565122dd7a1240b312
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
