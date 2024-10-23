@@ -1,0 +1,10 @@
+Установка пакета, при возникновении ошибки.
+pip install package_name --break-system-packages
+
+
+Последовательное удаление программы.
+sudo apt remove --purge q4wine
+sudo apt autoremove
+rm -rf ~/.config/q4wine
+sudo apt update
+
