@@ -1,37 +1,61 @@
 
-sudo apt install postgresql - установка.
 
-sudo -i -u postgres - Вход в учётную запись posgres.
-	createdb <имя базы данных> - создание базы данных.
-	dropdb <имя базы данных> - удаление базы данных.
-	psql
-		\l - проверка списка баз данных.
-		\q - выход.
-		
-		\c <имя БД> - заходим в БД.
-			\d - демонстрация табличек.
-			\d <имя таблицы> - проверка таблички.
-	 		create table <имя таблицы> (id serial, inn int); - создание таблицы.
-			alter table <имя таблицы> add <имя колонки> people varchar (255); - добавление колонки.
-			alter table <имя таблицы> rename column <имя колонки> to name; - переименование колонки.
-			alter table <имя таблицы> drop column <имя колонки>; - удаление колонки.
-			alter table <имя таблицы> rename to <новое имя>; - переименование таблицы.
-			drop table <имя таблицы> - удаление таблицы.
-			CREATE ROLE evgen WITH LOGIN PASSWORD 'ваш_пароль'; - создание роли пользователя.
-			ALTER ROLE evgen WITH SUPERUSER; - если нужно, добавьте пользователю права суперпользователя или другие привилегии:
-			GRANT ALL PRIVILEGES ON SCHEMA public TO evgen; - дать пользователю evgen права на схему public.
-			GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO evgen; - если нужно, предоставьте права на создание объектов в схеме.
+Примеры запросов и функций.
+WHERE onum BETWEEN 3000 AND 3100; - Интервал значений.
+WHERE _ - Нижнее подчёркивание означает обязательное присутствие одного символа.
+WHERE city LIKE 'N%'; - % означает произвольное количество символов.
+LENGHT(str) - Определяет длину строки.
+UPPER(str) - Всё в верхнем регистре.
+LOWER(str) - Всё в нижнем регистре.
+INITCAP(str) - Все заглавные.
+CONCAT(str, str) или || - Сцепка двух сторок.
+SUBSTER(str, ind, count=len(str)) - Забирает символы из текста. 
+SUBSTER("Hello", 3, 2); Результат: "ll"
+INSTR(str, symbol, ind=1, count=1) - Место вхождения элемента.
+INSTR("translate", "a", 2, 2); Результат: 7
 
-Создание и копирование дампа БД.
-sudo -u postgres pg_dump -d <имя БД> -FC > <расположение и имя файла для дампа><~/my.gz> - создаём дамп БД в директории.
-sudo -u postgres psql -d <имя БД> < tgposts_dump.sql - копируем образ и данные БД в нашу созданую БД.
+ROUND(column, 1) - Округление до десятых в большую сторону.
+TRUNC(column, 1) - Округление до десятых в меньшую сторону.
+REMAINDER(column, 2) - Находит чесло ближайшее к первому и кратное второму и вычитает из него первое.
+MOD(column, 2) - использует ближайшее меньшее значение.
+
+NVL(column, arg) - Заменяет значения null на arg.
+NULLIF(var_1, var_2) - Сравнивает два значения и если они совпадают, возвращает null, если нет, то первое значение.
+
+CASE END- Позволяет проверить несколько условий и в случае выполнения первого из них, вывести соответствующий результат.
+CASE
+WHEN age<20 THEN 'Child'
+WHEN age<60 THEN 'Man'
+ELSE 'Oldman'
+END as or_group
+
+DECODE() - Позволяет сравнить выражения со списком значений и вывести в зависимости от этого результат.
+DECODE(TRUNC(order / 1000),
+0, 'group_1',
+1, 'group_2',
+'group_3') as or_group
 
 
+Типы соединения таблиц. 
+INNER JOIN и NATURAL JOIN
+NATURAL JOIN == select sale from table_1 using(table_2);
+OUTER JOIN и CROSS JOIN
 
+ANY и ALL
+SELECT * FROM orders
+WHERE amt > ALL
+(SELECT amt FROM orders
+WHERE snum = 1001); - Остались только заказы, с суммами более, чем максимальная из сумм 1001-го продавца.
 
-2bca22016aed63565122dd7a1240b312
+UNION - Объединение оставляя только уникальные значения.
+Если есть необходимость сохранить дубликаты и значения null, то пишут UNION ALL.
+Если есть необходимость показать только дубликаты, то UNION меняют на INTERSECT.
+Если использовать MINUS - то в результате остануться только результаты первого минус результаты второго запроса.
+SELECT snum FROM orders WHERE amt > 100
+UNION
+SELECT snum FROM orders WHERE rating > 200; - Список продавцов, у которых суммы более 100 и рейтинг более 200.
 
-
+Запросы с WITH
 
 
 
