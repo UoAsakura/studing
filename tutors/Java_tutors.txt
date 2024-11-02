@@ -81,3 +81,26 @@ txt, название файла – фио ученика.
 писать не «лучший ученик», а «лучшие ученики» и выводить их списком.
 Обработка данного случая – факультативная, можно не делать, но если
 сделать - это будет хорошим тоном.
+
+
+Операторы ветвления (условий).
+
+Операторы if, else if , else.
+
+	if (height > 1500){
+	    fuel_tank -= (9 * b_to_c);
+	} else if (height > 1000) {
+	    fuel_tank -= (7 * b_to_c);
+	} else if (height > 500) {
+	    fuel_tank -= (4 * b_to_c);
+	} else  {
+	    fuel_tank -= (double) 1 * b_to_c;
+	}
+
+Операторы switch, case, default.
+
+        switch (name_month) {
+            case "Понедельник": result="Monday"; break;
+            case "воскресенье": result="Sunday"; break;
+            default:  // В случае, если ни одно из условий не выполнилось.
+                System.out.println("ERROR");

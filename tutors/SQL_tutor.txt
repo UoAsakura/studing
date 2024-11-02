@@ -94,20 +94,57 @@ ROW_NUMBER() over (ORDER BY amt DESC) AS order_rating
 FROM (SELECT * FROM orders WHERE amt > 100 ORDER BY onum);
 
 
+Создание таблыци.
+CREATE TABLE my_table (			-- Проверка при добовления записей в колонку на:
+column_1 NUMBER UNIQUE,			-- Уникальность
+column_2 NUMBER NOT NULL,		-- Наличия значения
+column_3 NUMBER CHECK (column_3 > 0) );	-- Соблюдения условия (значение больше 3)
 
 
+Работа с ограничениями.
+Присваивание названия ограничению
+CREATE TABLE my_table (			-- Присваиваем ограничению имя.
+CONSTRAINT check_column_3_positive CHECK (column_3 > 0) );
+
+-- Демонстрация названий ограничений в таблице и их тип.
+SELECT * FROM DBA_CONSTRAINTS WHERE table_name = 'my_table'; 
+
+-- Демонстрация, к каким столбцам в таблице применены ограничения.
+SELECT * FROM DBA_CONS_COLUMNS WHERE table_name = 'my_table'; 
+
+-- Деактивация ограничения. Удаляем ограничений с 3-го столбца таблицы.
+ALTER TABLE my_table DROP CONSTRAINT check_column_3_positive;
+
+-- Добавление ограничения в уже существующую таблицу.
+ALTER TABLE my_table ADD CONSTRAINT check_column_3_positive CHECK (column_3 > 0);
+
+-- Переименовывание ограничения.
+ALTER TABLE my_table RENAME CONSTRAINT name_const TO new_name_const;
 
 
+Первичные и внешние ключи.
+Создание таблицы с первичным ключом.
+CREATE TABLE my_table_a (			
+column_1 NUMBER PRIMARY KEY,	-- Значение первичного ключа, должны быть уникальны.	
+column_2 NUMBER );		
+
+Создание таблицы с внешним ключом.
+CREATE TABLE my_table_b (			
+column_1 NUMBER REFERENCES my_table_a(column_1),		
+column_2 NUMBER );	
 
 
+Создание последовательностей SEQUENCE.
+CREATE SEQUENCE table_a_seq	-- Нвзвание последовательности.
+MINVALUE 1			-- Минимальное значение.
+START WITH			-- Первое значение.
+INCREMENT BY 1			-- Шаг, увеличения каждого следующего значения.
+CACHE 20;			-- Кол-во значений кэшируемых в памяти.
 
-
-
-
-
-
-
-
+CREATE TABLE table_a (
+id NUMBER PRIMARY KEY,
+column_2 NUMBER);
+INSERT INTO table_a (id, column_2) VALUES (table_a_seq.nextval, 1) ;
 
 
 
