@@ -7,4 +7,13 @@ sudo apt remove --purge q4wine
 sudo apt autoremove
 rm -rf ~/.config/q4wine
 sudo apt update
+duf - демонстрация
+iostat - демонстрация
+df -h - по заполнености дискового пространства.
+du - по конкретной дикектории
+	du -sh
+w - активные пользователи
+ls -l /proc/*/exe - демонстрация символических ссылок exe-шников.
+netstat - мониторинг сети.
 
+watch -d -n 0.5 nvidia-smi - мониторинг работы видеокарты.
