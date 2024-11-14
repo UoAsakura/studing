@@ -1,19 +1,26 @@
 Установка пакета, при возникновении ошибки.
 pip install package_name --break-system-packages
 
-
 Последовательное удаление программы.
 sudo apt remove --purge q4wine
 sudo apt autoremove
 rm -rf ~/.config/q4wine
 sudo apt update
+-------------------------------------------
 duf - демонстрация
 iostat - демонстрация
 df -h - по заполнености дискового пространства.
 du - по конкретной дикектории
 	du -sh
+sudo atop - мониторинг ресурсов
+gnome-system-monitor - мониторинг ресурсов с графической оболочкой.
+
 w - активные пользователи
 ls -l /proc/*/exe - демонстрация символических ссылок exe-шников.
-netstat - мониторинг сети.
 
 watch -d -n 0.5 nvidia-smi - мониторинг работы видеокарты.
+
+Сеть:
+netstat - мониторинг сети.
+netstat -ntlp | grep LISTEN - просмотр активных портов.
+sudo lsof -nP -i | grep LISTEN
