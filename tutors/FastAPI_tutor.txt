@@ -1,0 +1,76 @@
+
+Установка приложения
+py -m  venv venv - создаём витруальное окружение в директории нашего проекта
+source ./venv/bin/activate - заходим в витруальное окружение
+pip install fastapi - импортируем библиотеку fastapi
+pip install 
+	sqlalchemy 
+	pydantic 
+	alembic 
+	asyncpg (альтернатива psycopg2)
+
+
+Структура проекта.
+	venv
+	app
+		main.py
+		schemes
+			schemes.py
+
+
+
+Запуск приложения 
+uvicorn app.main:app - запуск приложения
+uvicorn app.main:app --reload - запуск приложения с автоматическим перезапуском в случае изменения кода
+
+
+Работа с данными.
+	- Pydantic
+	Пример использования:
+		from pydantic import BaseModel
+		class SHotel(BaseModel):
+			address: str
+			name: str
+			stars: int
+
+
+Работа с БД.
+	- SQLAlchemy - популярная ORM (Object-Relational Mapping, объектно-реляционное отображение) для работы с БД.
+	- Alembic - Популярная библиотека для миграций.
+
+Кэширование.
+	- FatsAPI Cache
+	- Redis
+	
+Ассинхронные задачи
+	- Celery
+	- RabbitMQ
+
+
+Взаимодействие с фронтендом
+	- CORS
+	- HTML шаблоны (Jinja)
+	- Пагинация
+	
+	
+Авторизация
+	- FatsAPI Users
+	
+	
+Тестирование
+	- Pytest
+	- httpx
+	
+	
+Логирование
+	- Sentry
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
