@@ -37,7 +37,28 @@ uvicorn app.main:app --reload - запуск приложения с автом�
 Работа с БД.
 	- SQLAlchemy - популярная ORM (Object-Relational Mapping, объектно-реляционное отображение) для работы с БД.
 	- Alembic - Популярная библиотека для миграций.
+$ alembic init migrations
+env.py 
+	# Указываем alembic, что он находится в директории app, чтобы корректно работали импорты
+	import sys
+	from os.path import abspath, dirname
+	sys.path.insert(0, dirname(dirname(dirname(abspath(__file__)))))
+	# Передаём данные о таблицах созданных на бекэнде
+	target_metadata = Base.metadata 
+	# Указали alembic с какой БД сравнивать
+	config.set_main_option("sqlalchemy.url", f"{DATABASE_URL}?async_fallback=True")
 
+# Создание миграции
+$ alembic revision --autogenerate -m "Initial migration"
+# Прогон миграции до последней
+$ alembic upgrade head 
+# Прогон конкректой миграции 
+$ alembic upgrade cc6ef810b14e
+
+# Для отката на одну миграцию, можно использовать
+$ alembic downgrade -1
+
+	
 Кэширование.
 	- FatsAPI Cache
 	- Redis
