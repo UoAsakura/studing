@@ -112,4 +112,24 @@ for - когда число повторений изветсно.
 do-while - цикл с пост-условием.
 for each - цикл для перебора колекций.
 
-
+Методы строк:
+//String concat(String s) (аналог +) - слияние строк
+//boolean equals(Object ob) - сравнение строк с учётом регистра
+//boolean equalsIgnoreCase(String s) - сравнение строк без учёта регистра
+//int compareTo(String s) - лексикографическое сравнение строк с учётом регистра
+//int compareToIgnoreCase(String s) - лексикографическое сравнение строк без учёта регистра
+//String substring(int n, int m) - срез с n до m не включительно
+//String substring(int n) - срез c индекса n
+//int length() - определение длины строки
+//int indexOf(char ch) - поиск первого символа
+//int indexOf(char ch, int n) - поиск первого символа с индекса n
+//int lastIndexOf(char ch) - поиск последнего символа
+//int lastIndexOf(char ch, int n) - поиск последнего символа с индекса n
+//String toUpperCase()/toLowerCase
+//String replace(char ch1, char ch2)/String replace(String str1, String str2)
+//String trim() - удаление пробелов в начале и конце
+//char charAt(int position) - возвращение символа по индексу
+//boolean isEmpty()
+//char[] getChars(int srcBegin, int srcEnd, char[] dst, int dstBegin) - извлечение всех символов стрки в массиве символов
+//String[] split(String regex)
+//String[] split(String regex, int limit)
