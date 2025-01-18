@@ -41,3 +41,20 @@ done
 touch dir{00..42}/text{00..42}.txt - множественное создание файлов
 
 awk '{print $9}' - просмотр 9-ой колонки, $0 - все колонки.
+
+Команды для просмотра дисковай подсистемы:
+	- free
+	- cat /proc/meminfo
+	- vmstat -s
+	- top
+	- htop
+	- sudo dmidecode -t 17
+
+
+Посмотреть переменные среды:
+	- printenv
+	
+	
+Активация и деактивация витуального окружения:
+	- source <venv/bin/activate>
+	- deactivate
