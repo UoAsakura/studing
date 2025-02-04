@@ -1,0 +1,65 @@
+
+Устанавливаем:
+	VirtualBox
+	kubectl (добавляем в Path)
+	minikube (добавляем в Path)
+
+
+Начало работы:
+	> minikube start
+	Если выдаёт ошибку: Exiting due to HOST_VIRT_UNAVAILABLE: Failed to start host: creating host: create: precreate: This computer doesn't have VT-X/AMD-v enabled. Enabling it in the BIOS is mandatory
+	То можно попробовать, либо изменить настройки BIOS, либо использовать:
+	> minikube start --no-vtx-check
+	
+После запуска, конфигурационный файл, будет находиться в:
+C:\Users\user\.kube\config
+Так же он качает ISO-файл, который находится в:
+C:\Users\user\.minikube\machines\minikube\boot2docker.iso
+
+Просмотр статуса компонентов нашего кластера:
+kubectl get componentstatuses
+kubectl cluster-info
+
+Просмотр из скольких серверов состоит наш кластер:
+kubectl get nodes
+
+minikube stop - остановка калстера
+minikube delete - удаление кластера
+
+Поднятие кластера с точным указанием выделяемых ресурсов:
+minikube start --cpus=4 --memory=5gb --disk-size=25gb -p klusterName --no-vtx-check
+
+Чтобы зайти в запущенный кластер через cmd:
+minikube ssh
+
+Заход через docker-user:
+username: docker
+password: tcuser
+(root - без пароля)
+
+----------------------------------------------------------------------------------
+
+Для поднятия кластер Kuber в AWS (Amazon Web Servises) нам потребуется:
+
+aws cli - нужен для аутентификации и запуска команд aws
+kubectl - для управления K8s Cluster'ом
+eksctl - для сознания K8s Cluster'а
+
+
+Переходим на наш ОС Linux Ubuntu
+> pip3 install awscli --upgrade
+> mkdir /kubernetes
+
+Инсталируем eksctl:
+# for ARM systems, set ARCH to: `arm64`, `armv6` or `armv7`
+ARCH=amd64
+PLATFORM=$(uname -s)_$ARCH
+
+curl -sLO "https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_$PLATFORM.tar.gz"
+
+# (Optional) Verify checksum
+curl -sL "https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_checksums.txt" | grep $PLATFORM | sha256sum --check
+
+tar -xzf eksctl_$PLATFORM.tar.gz -C /tmp && rm eksctl_$PLATFORM.tar.gz
+
+sudo mv /tmp/eksctl /usr/local/bin
