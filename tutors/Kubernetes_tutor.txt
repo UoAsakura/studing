@@ -63,3 +63,39 @@ curl -sL "https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_ch
 tar -xzf eksctl_$PLATFORM.tar.gz -C /tmp && rm eksctl_$PLATFORM.tar.gz
 
 sudo mv /tmp/eksctl /usr/local/bin
+
+
+-----------------------------------------------------------------------------------
+
+Для запуска кластера minikube, так же можно указать флаг --dirver, после чего присовить нужный нам тип, например minikube start --driver=docker
+
+minikube kubectl version - сравнение версий клиента (kubectl) и кластера (kubernetes)
+
+kubectl get pods - просмотр всех подов в нашем кластере.
+
+kubectl get nodes - демонстрация информации о нодах нашего кластера (в том числе и master ноды)
+
+kubectl get namespaces - демонстрация информации о системном пространстве имён.
+
+Команда для просмотра запущенных подов в кластере:
+kubectl get pods --namespace=kube-system 
+
+minikube ip - просмотр IP-адресса ноды.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
